@@ -8,11 +8,11 @@ export default defineConfig({
     proxy: {
       // ต้องใส่ intent ก่อน เพราะ /investment-ai-agent เป็น prefix ของมัน
       '^/investment-ai-agent-intent': {
-        target: 'http://localhost:8802',
+        target: process.env.VITE_API_INTENT_URL || 'http://localhost:8802',
         changeOrigin: true,
       },
       '^/investment-ai-agent(?!-intent)': {
-        target: 'http://localhost:8801',
+        target: process.env.VITE_API_BASELINE_URL || 'http://localhost:8801',
         changeOrigin: true,
       },
     },
