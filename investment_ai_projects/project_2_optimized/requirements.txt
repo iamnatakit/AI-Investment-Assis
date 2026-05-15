@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+streamlit
+pydantic
+sqlalchemy
+openai
+python-dotenv
+google-genai # Google ADK might be accessed via genai or separate specific framework
+google-cloud-aiplatform

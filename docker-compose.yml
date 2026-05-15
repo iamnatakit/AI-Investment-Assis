@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: investment_chatbot
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # project_1:
+  #   build: ./project_1_investment_ai_agent
+  #   ...
+
+  # project_2:
+  #   build: ./project_2_investment_ai_agent_intent
+  #   ...
+
+  # frontend:
+  #   build: ./frontend
+  #   ...
+
+volumes:
+  postgres_data:
