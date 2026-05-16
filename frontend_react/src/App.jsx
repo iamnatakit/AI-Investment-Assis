@@ -27,8 +27,31 @@ export default function App() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [lastMeta, setLastMeta] = useState(null)
+  const [showReport, setShowReport] = useState(false)
+  const [reportData, setReportData] = useState(null)
+  const [loadingReport, setLoadingReport] = useState(false)
+
   const messagesEndRef = useRef(null)
   const textareaRef = useRef(null)
+
+  const fetchReport = async () => {
+    setLoadingReport(true)
+    setShowReport(true)
+    try {
+      // The report API is under project 2 intent agent
+      const res = await fetch('http://localhost:8802/investment-ai-agent-intent/report', { cache: 'no-store' })
+      try {
+        const data = await res.json()
+        setReportData(data)
+      } catch (e) {
+        setReportData(null)
+      }
+    } catch (err) {
+      console.error('Error fetching report', err)
+    } finally {
+      setLoadingReport(false)
+    }
+  }
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -118,15 +141,180 @@ export default function App() {
       <header className="header">
         <div className="header-logo">
           <div className="logo-icon">📈</div>
-          <h1>Investment AI Agent</h1>
+          <h1>Dual-Agent Investment AI</h1>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div className="status-dot" />
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            {mode === 'baseline' ? 'Baseline · Port 8801' : 'Intent Optimized · Port 8802'}
-          </span>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <button 
+            onClick={fetchReport}
+            style={{
+              background: 'rgba(59, 130, 246, 0.1)',
+              border: '1px solid var(--accent-blue)',
+              color: 'var(--accent-blue)',
+              padding: '0.4rem 1rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              fontWeight: 500
+            }}
+          >
+            📊 View Report
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+            <div className="status-dot" />
+            <span style={{ color: 'var(--text-muted)' }}>Systems Online</span>
+          </div>
         </div>
       </header>
+
+      {/* Report Modal */}
+      {showReport && (() => {
+        if (loadingReport) {
+          return (
+            <div className="modal-overlay" onClick={() => setShowReport(false)}>
+              <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <div className="modal-body" style={{ textAlign: 'center', padding: '2rem' }}>
+                  กำลังโหลดข้อมูล...
+                </div>
+              </div>
+            </div>
+          )
+        }
+        if (!reportData || (!reportData.overall && !reportData.error)) {
+          return (
+            <div className="modal-overlay" onClick={() => setShowReport(false)}>
+              <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h3>📊 Token & Cost Report</h3>
+                  <button className="close-btn" onClick={() => setShowReport(false)}>×</button>
+                </div>
+                <div className="modal-body" style={{ textAlign: 'center', padding: '2rem' }}>
+                  <p style={{ color: 'var(--accent-amber)' }}>ไม่สามารถดึงข้อมูลได้</p>
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        if (reportData.error) {
+          return (
+            <div className="modal-overlay" onClick={() => setShowReport(false)}>
+              <div className="modal-content" onClick={e => e.stopPropagation()} style={{maxWidth: '800px'}}>
+                <div className="modal-header">
+                  <h3>📊 Token & Cost Report (ERROR)</h3>
+                  <button className="close-btn" onClick={() => setShowReport(false)}>×</button>
+                </div>
+                <div className="modal-body" style={{ textAlign: 'left', padding: '2rem', overflowX: 'auto' }}>
+                  <p style={{ color: 'var(--accent-amber)' }}>Backend Error: {reportData.error}</p>
+                  <pre style={{ fontSize: '0.75rem', color: '#ffaaaa', marginTop: '1rem', whiteSpace: 'pre-wrap' }}>{reportData.traceback}</pre>
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        return (
+          <div className="modal-overlay" onClick={() => setShowReport(false)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <div className="modal-title">📊 Token & Cost Report</div>
+                <button className="close-btn" onClick={() => setShowReport(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                <>
+                  <div className="report-section">
+                    <h4>ภาพรวมทั้งหมด (Overall)</h4>
+                    <div className="metric-grid" style={{ marginBottom: '1rem' }}>
+                      <div className="metric-card">
+                        <div className="metric-label">Total Tokens Used</div>
+                        <div className="metric-value blue">{reportData.overall.total_tokens.toLocaleString()}</div>
+                      </div>
+                      <div className="metric-card">
+                        <div className="metric-label">Total Cost</div>
+                        <div className="metric-value green">
+                          ${reportData.overall.total_cost_usd.toFixed(5)}
+                          <div className="metric-unit">≈ ฿{reportData.overall.total_cost_thb.toFixed(2)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="report-section">
+                    <h4>แยกตามโปรเจกต์ (By Project)</h4>
+                    <table className="report-table">
+                      <thead>
+                        <tr>
+                          <th>Project Name</th>
+                          <th>Requests</th>
+                          <th>Tokens</th>
+                          <th>Cost (USD)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData.by_project.map((p, i) => (
+                          <tr key={i}>
+                            <td>
+                              <span className={`tag ${p.project_name.includes('intent') ? 'tag-purple' : 'tag-blue'}`}>
+                                {p.project_name === 'project_1_baseline' ? 'Baseline (🤖)' : 'Intent (🧠)'}
+                              </span>
+                            </td>
+                            <td>{p.total_requests.toLocaleString()}</td>
+                            <td>{p.total_tokens.toLocaleString()}</td>
+                            <td className="green">${p.cost_usd.toFixed(5)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="report-section">
+                    <h4>20 รายการล่าสุด (Recent Transactions)</h4>
+                    <div style={{ maxHeight: '250px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                      <table className="report-table" style={{ border: 'none', borderRadius: 0 }}>
+                        <thead style={{ position: 'sticky', top: 0, zIndex: 1, background: 'var(--bg-secondary)' }}>
+                          <tr>
+                            <th>เวลา</th>
+                            <th>โมเดล</th>
+                            <th>Tokens</th>
+                            <th>ค่าใช้จ่าย (฿)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reportData.recent_transactions?.map((t, i) => (
+                            <tr key={i}>
+                              <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                {new Date(t.created_at).toLocaleString('th-TH', { 
+                                  month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' 
+                                })}
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                  <span className={`tag ${(t.project_name || '').includes('intent') ? 'tag-purple' : 'tag-blue'}`} style={{ alignSelf: 'flex-start', fontSize: '0.65rem' }}>
+                                    {t.project_name === 'project_1_baseline' ? 'Baseline' : 'Intent'}
+                                  </span>
+                                  <span style={{ fontSize: '0.75rem' }}>{(t.model || 'Unknown').replace('google/', '')}</span>
+                                </div>
+                              </td>
+                              <td className="blue">{t.tokens.toLocaleString()}</td>
+                              <td className="amber">฿{t.cost_thb.toFixed(4)}</td>
+                            </tr>
+                          ))}
+                          {(!reportData.recent_transactions || reportData.recent_transactions.length === 0) && (
+                            <tr>
+                              <td colSpan="4" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>
+                                ยังไม่มีข้อมูลการใช้งาน
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Main */}
       <div className="main-layout">

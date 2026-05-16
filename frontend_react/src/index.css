@@ -490,3 +490,93 @@ body {
   .chat-panel { min-height: 60vh; border-right: none; border-bottom: 1px solid var(--border-color); }
   .analytics-panel { max-height: 40vh; }
 }
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  line-height: 1;
+}
+
+.close-btn:hover { color: white; }
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.report-section {
+  margin-bottom: 1.5rem;
+}
+
+.report-section h4 {
+  color: var(--accent-blue);
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.report-table th, .report-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.85rem;
+}
+
+.report-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+  background: rgba(255,255,255,0.02);
+}
+
+.report-table tr:last-child td {
+  border-bottom: none;
+}
